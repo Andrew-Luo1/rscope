@@ -4,31 +4,35 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rscope"
-version = "0.1.0"
+version = "0.0.1"
 readme = "README.md"
 description = "RL training visualizer for Mujoco Playground environments + Brax training"
 authors = [
-    {name = "Andrew Luo", email = "andrew.luo1@outlook.com"},
+    {name = "Jing Yuan Luo", email = "andrew.luo1@outlook.com"},
 ]
 requires-python = ">=3.10"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering",
 ]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+
 dependencies = [
+    "brax",
+    "jax",
+    "ml_collections",
     "numpy",
+    "paramiko",
     "mujoco",
     "watchdog",
-    "jax",
-    "paramiko",
-    "ml_collections"
 ]
+
 keywords = ["mujoco", "reinforcement learning", "brax", "visualization"]
 
 [project.optional-dependencies]
@@ -48,6 +52,9 @@ dev = [
 all = [
     "rscope[dev]",
 ]
+
+[project.urls]
+Homepage = "https://github.com/Andrew-Luo1/rscope"
 
 [tool.hatch.build.targets.wheel]
 packages = ["rscope"]

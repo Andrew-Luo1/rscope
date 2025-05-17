@@ -29,7 +29,6 @@ def main(ssh_enabled=False, polling_interval=10):
   # Load the Mujoco model and data.
   mj_model, mj_data, meta = model_loader.load_model_and_data(ssh_enabled)
 
-
   if ssh_enabled:
     logging.info(
         f"SSH file watching enabled with polling interval: {polling_interval}s"
@@ -72,7 +71,11 @@ def main(ssh_enabled=False, polling_interval=10):
   # Wait for new rollouts to trickle in.
   while not rollout.rollouts:
     print(f"No unrolls found in {config.BASE_PATH}, waiting...")
-    time.sleep(4)
+    time.sleep(10)
+  print(
+      f"Found {len(rollout.rollouts)} rollouts in {config.BASE_PATH}, "
+      "starting viewer..."
+  )
 
   # Initialize figures using metrics keys from the first rollout.
   metrics_keys = list(rollout.rollouts[0].metrics.keys())

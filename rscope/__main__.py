@@ -22,6 +22,6 @@ def _main(argv):
 
 if __name__ == '__main__':
   logging.set_verbosity(
-      logging.INFO
+      logging.WARNING
   )  # Set to INFO to debug SSH and file watcher.
   app.run(_main)
