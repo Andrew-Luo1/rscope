@@ -1,11 +1,14 @@
-import threading
-import paramiko
 import os
-from absl import logging
-from queue import Queue, Empty
-import rscope.config as config
+from queue import Empty
+from queue import Queue
 import re
+import threading
 import time
+
+from absl import logging
+import paramiko
+
+import rscope.config as config
 
 
 def ssh_connect(ssh):

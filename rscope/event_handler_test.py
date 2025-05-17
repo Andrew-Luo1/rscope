@@ -1,11 +1,11 @@
 """Test for event handler functionality in rscope."""
 
+from pathlib import Path
 import pickle
 import shutil
 import tempfile
 import threading
 import time
-from pathlib import Path
 
 from absl.testing import absltest
 from watchdog.observers import Observer

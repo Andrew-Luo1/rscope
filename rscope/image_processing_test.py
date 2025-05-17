@@ -1,8 +1,8 @@
 """Tests for image processing module."""
 
-import numpy as np
 from absl.testing import absltest
 from absl.testing import parameterized
+import numpy as np
 
 from rscope import image_processing
 

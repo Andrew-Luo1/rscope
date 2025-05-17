@@ -3,8 +3,9 @@
 import ast
 import os
 import pathlib
-from absl.testing import absltest
+
 from absl import logging
+from absl.testing import absltest
 
 
 class MainConfigTest(absltest.TestCase):

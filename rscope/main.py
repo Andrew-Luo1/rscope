@@ -1,8 +1,8 @@
 """Rscope main script."""
 
-import time
 from queue import Queue
-from watchdog.observers import Observer
+import threading
+import time
 
 from absl import app
 from absl import flags
@@ -16,10 +16,10 @@ import rscope.event_handler as event_handler
 import rscope.image_processing as image_processing
 import rscope.model_loader as model_loader
 import rscope.rollout as rollout
+from rscope.ssh_utils import SSHFileTransfer
+from rscope.ssh_utils import SSHFileWatcher
 from rscope.state import ViewerState
 import rscope.viewer_utils as vu
-import threading
-from rscope.ssh_utils import SSHFileWatcher, SSHFileTransfer
 
 
 def main(ssh_enabled=False, polling_interval=10):
@@ -29,10 +29,6 @@ def main(ssh_enabled=False, polling_interval=10):
   # Load the Mujoco model and data.
   mj_model, mj_data, meta = model_loader.load_model_and_data(ssh_enabled)
 
-  # Initialize SSH components if enabled
-  watcher_thread = None
-  transfer_thread = None
-  stop_event = None
 
   if ssh_enabled:
     logging.info(

@@ -2,8 +2,9 @@
 
 from pathlib import Path
 import pickle
-from absl import logging
 from typing import Dict, List, NamedTuple, Union
+
+from absl import logging
 from numpy.typing import NDArray
 
 MAX_VIEWPORTS = 12

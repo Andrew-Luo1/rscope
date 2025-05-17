@@ -1,15 +1,15 @@
 """Model loader."""
 
+import pathlib
 import pickle
 import time
-import pathlib
 
 import epath
 import mujoco
+import paramiko
 
 import rscope.config as config
 from rscope.ssh_utils import ssh_connect
-import paramiko
 
 
 def load_model_and_data(ssh_enabled=False):

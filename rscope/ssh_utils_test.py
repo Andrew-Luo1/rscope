@@ -1,16 +1,17 @@
 import os
-import time
-import threading
-import tempfile
-import shutil
-from queue import Queue
 from pathlib import Path
+from queue import Queue
+import shutil
+import tempfile
+import threading
+import time
 from unittest import mock
 
 from absl.testing import absltest
 
 import rscope.config as config
-from rscope.ssh_utils import SSHFileWatcher, SSHFileTransfer
+from rscope.ssh_utils import SSHFileTransfer
+from rscope.ssh_utils import SSHFileWatcher
 
 
 class MockSFTP:

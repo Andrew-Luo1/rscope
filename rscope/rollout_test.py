@@ -1,12 +1,12 @@
 """Tests for rollout utilities."""
 
 import os
+from pathlib import Path
 import pickle
 import tempfile
-from pathlib import Path
 
-import numpy as np
 from absl.testing import absltest
+import numpy as np
 
 from rscope import rollout
 from rscope.test_utils import create_fake_unroll

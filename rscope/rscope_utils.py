@@ -2,15 +2,17 @@
 
 import datetime
 import os
+import pathlib
 from pathlib import PosixPath
 import pickle
 import shutil
 from typing import Any, Dict, Optional, Union
-import pathlib
+
 import jax
 import numpy as np
 
-from rscope.config import BASE_PATH, TEMP_PATH
+from rscope.config import BASE_PATH
+from rscope.config import TEMP_PATH
 
 
 def rscope_init(
