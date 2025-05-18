@@ -23,11 +23,15 @@ import rscope.viewer_utils as vu
 
 
 def main(ssh_enabled=False, polling_interval=10):
+
+  # if BASE_PATH does not exist, make it
+  if not config.BASE_PATH.exists():
+    config.BASE_PATH.mkdir(parents=True, exist_ok=True)
+  if not config.TEMP_PATH.exists():
+    config.TEMP_PATH.mkdir(parents=True, exist_ok=True)
+
   # Create an instance of ViewerState to encapsulate state.
   viewer_state = ViewerState()
-
-  # Load the Mujoco model and data.
-  mj_model, mj_data, meta = model_loader.load_model_and_data(ssh_enabled)
 
   if ssh_enabled:
     logging.info(
@@ -65,13 +69,13 @@ def main(ssh_enabled=False, polling_interval=10):
     logging.error(f"Error starting observer: {e}")
 
   if not ssh_enabled:
-    # Load all existing unroll files from the base path into rollouts.
+    # Duplicates in the case of ssh_enabled.
     rollout.load_all_local_unrolls(config.BASE_PATH)
 
   # Wait for new rollouts to trickle in.
+  print("Waiting for rollouts...")
   while not rollout.rollouts:
-    print(f"No unrolls found in {config.BASE_PATH}, waiting...")
-    time.sleep(10)
+    time.sleep(3)
   print(
       f"Found {len(rollout.rollouts)} rollouts in {config.BASE_PATH}, "
       "starting viewer..."
@@ -83,6 +87,9 @@ def main(ssh_enabled=False, polling_interval=10):
 
   # Determine the initial replay length.
   replay_len = rollout.rollouts[0].qpos.shape[0]
+
+  # Load the Mujoco model and data.
+  mj_model, mj_data, meta = model_loader.load_model_and_data(ssh_enabled)
 
   with mujoco_viewer.launch_passive(
       mj_model,

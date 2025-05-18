@@ -15,14 +15,23 @@ from rscope import config
 from rscope import rollout
 
 
+def clear_dir(path: pathlib.Path):
+  for child in path.iterdir():
+    if child.is_dir():
+      shutil.rmtree(child)
+    else:
+      child.unlink()
+
+
 def rscope_init(
     xml_path: Union[PosixPath, str],
     model_assets: Optional[Dict[str, Any]] = None,
 ):
   # clear the active run directory.
   if os.path.exists(config.BASE_PATH):
-    shutil.rmtree(config.BASE_PATH)
-  os.makedirs(config.BASE_PATH)
+    clear_dir(config.BASE_PATH)
+  else:
+    os.makedirs(config.BASE_PATH)
 
   # save the xml into the assets for remote rscope usage.
   if model_assets is None:
