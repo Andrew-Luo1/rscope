@@ -62,7 +62,7 @@ def dump_eval(eval: dict):
   eval = jax.tree.map(lambda x: np.array(x), eval)
 
   # save as dict rather than brax Transition.
-  raw_rollout = eval.extras["state_extras"]["rscope"]
+  raw_rollout = eval.extras["state_extras"]["trace"]
   eval_rollout = rollout.Rollout(
       qpos=raw_rollout["qpos"],
       qvel=raw_rollout["qvel"],

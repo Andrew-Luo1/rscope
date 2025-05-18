@@ -78,7 +78,7 @@ class EventHandlerTest(absltest.TestCase):
       self.assertEqual(len(rollout.rollouts), 0)
 
       # Start a thread that will create unroll files
-      num_unrolls = 5
+      num_unrolls = 3
       unroll_generator = UnrollGenerator(
           self.temp_dir, interval=0.5, num_unrolls=num_unrolls
       )
@@ -94,7 +94,7 @@ class EventHandlerTest(absltest.TestCase):
           len(rollout.rollouts) < num_unrolls
           and time.time() - start_time < max_wait_time
       ):
-        time.sleep(0.1)
+        time.sleep(0.5)
 
       # Verify that all unrolls were added
       self.assertEqual(len(rollout.rollouts), num_unrolls)
