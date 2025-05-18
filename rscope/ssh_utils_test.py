@@ -66,14 +66,19 @@ class SSHUtilsTest(absltest.TestCase):
     config.TEMP_PATH = Path(self.local_temp_dir)
 
     # Set up the SSH client mock
-    self.patcher = mock.patch(
+    self.ssh_client_patcher = mock.patch(
         "paramiko.SSHClient", return_value=MockSSHClient(self.remote_temp_dir)
     )
-    self.mock_ssh_client = self.patcher.start()
+    self.mock_ssh_client = self.ssh_client_patcher.start()
+
+    # Mock the ssh_connect function to prevent it from being called
+    self.ssh_connect_patcher = mock.patch("rscope.ssh_utils.ssh_connect")
+    self.mock_ssh_connect = self.ssh_connect_patcher.start()
 
   def tearDown(self):
-    # Stop the patcher
-    self.patcher.stop()
+    # Stop the patchers
+    self.ssh_client_patcher.stop()
+    self.ssh_connect_patcher.stop()
 
     # Restore original config values
     config.BASE_PATH = self.orig_base_path

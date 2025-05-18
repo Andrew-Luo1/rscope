@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rscope"
-version = "0.0.1"
+version = "0.0.2"
 readme = "README.md"
 description = "RL training visualizer for Mujoco Playground environments + Brax training"
 authors = [
@@ -26,7 +26,6 @@ license-files = ["LICEN[CS]E*"]
 dependencies = [
     "brax",
     "jax",
-    "ml_collections",
     "numpy",
     "paramiko",
     "mujoco",

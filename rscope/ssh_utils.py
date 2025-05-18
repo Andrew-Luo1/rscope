@@ -5,20 +5,49 @@ import re
 import threading
 import time
 
+from absl import flags
 from absl import logging
 import paramiko
 
 import rscope.config as config
 
+# Get access to flags
+FLAGS = flags.FLAGS
+
 
 def ssh_connect(ssh):
   ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-  ssh.connect(
-      config.CONFIG.ssh_host,
-      port=config.CONFIG.ssh_port,
-      username=config.CONFIG.ssh_username,
-      key_filename=os.path.expanduser(config.CONFIG.ssh_key_path),
-  )
+  # Parse ssh_to string (username@host[:port])
+  ssh_to = FLAGS.ssh_to
+  if "@" in ssh_to:
+    username, host_port = ssh_to.split("@", 1)
+  else:
+    username = None
+    host_port = ssh_to
+
+  # Parse optional port
+  if ":" in host_port:
+    host, port_str = host_port.split(":", 1)
+    port = int(port_str)
+  else:
+    host = host_port
+    port = 22  # Default SSH port
+
+  # Connect using parsed values with timeout
+  try:
+    ssh.connect(
+        host,
+        port=port,
+        username=username,
+        key_filename=os.path.expanduser(FLAGS.ssh_key),
+        timeout=10,
+    )
+  except paramiko.SSHException as e:
+    logging.error(f"SSH connection failed: {e}")
+    exit(1)
+  except Exception as e:
+    logging.error(f"Unexpected error during SSH connection: {e}")
+    exit(1)
 
 
 class SSHFileWatcher(threading.Thread):
