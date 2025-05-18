@@ -24,7 +24,6 @@ license = "MIT"
 license-files = ["LICEN[CS]E*"]
 
 dependencies = [
-    "brax",
     "jax",
     "numpy",
     "paramiko",

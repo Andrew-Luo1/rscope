@@ -38,27 +38,18 @@ def append_unroll(fpath: Union[str, Path]):
   logging.info(f'Loading unroll: {fpath}')
   global num_evals, num_envs, env_ctrl_dt, change_rollout
   with open(fpath, 'rb') as f:
-    transitions = pickle.load(f)
-  raw_rollout = transitions.extras['state_extras']['rscope']
-  assert raw_rollout['qpos'].shape[1] == raw_rollout['qvel'].shape[1], (
-      f"qpos and qvel shapes don't match: {raw_rollout['qpos'].shape} vs"
-      f" {raw_rollout['qvel'].shape}"
+    rollout = pickle.load(f)
+  rollouts.append(rollout)
+
+  assert rollout.qpos.shape[:2] == rollout.qvel.shape[:2], (
+      'qpos and qvel non-matching time or envs dimension:'
+      f' {rollout.qpos.shape} vs {rollout.qvel.shape}'
   )
-  num_envs = raw_rollout['qpos'].shape[1]
-  rollouts.append(
-      Rollout(
-          qpos=raw_rollout['qpos'],
-          qvel=raw_rollout['qvel'],
-          mocap_pos=raw_rollout['mocap_pos'],
-          mocap_quat=raw_rollout['mocap_quat'],
-          obs=transitions.observation,
-          reward=transitions.reward,
-          time=raw_rollout['time'],
-          metrics=raw_rollout['metrics'],
-      )
-  )
+
+  num_envs = rollout.qpos.shape[1]
   num_evals += 1
-  env_ctrl_dt = raw_rollout['time'][1, 0] - raw_rollout['time'][0, 0]
+  # TODO: this is wrong when it resets on timestep 1.
+  env_ctrl_dt = rollout.time[1, 0] - rollout.time[0, 0]
   if len(rollouts) == 1:
     change_rollout = True
 
