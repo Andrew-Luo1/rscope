@@ -1,25 +1,63 @@
-# rscope
-RL training visualizer for Mujoco Playground environments + Brax training
+### Welcome to rscope!
 
-## Usage
+Interactively visualize trajectories while training Mujoco Playground environments. Rscope can visualize both local and remote [headless] training runs.
 
-### Local Mode
+#### Installation
+> [!IMPORTANT]
+> Requires Python 3.10 or later.
+
+`pip install rscope`
+
+### Usage
+> [!IMPORTANT]
+> Mac users must run mjpython instead of python, ex mjpython -m rscope
+
+#### Local training runs
 To visualize locally stored rollouts:
-```bash
-python -m rscope
+
+`python -m rscope`
+
+#### Remote training runs
+Below, **update user@remote_host**, for example alice@168.42.4.8.
+
+First, set up password-free key-based SSH connection with the remote device:
+```
+ssh-keygen -t ed25519 -f ~/.ssh/rsync_key -N ""
+ssh-copy-id -i ~/.ssh/rsync_key.pub user@remote_host
+```
+If this worked, you should be able to ssh in without using a password:
+```
+ssh -i ~/.ssh/rsync_key user@remote_host
+echo hello
+exit
 ```
 
-### SSH Mode
 To visualize rollouts stored on a remote server via SSH:
-```bash
-python -m rscope --ssh-to username@hostname[:port] --ssh-key ~/path/to/private_key
+
+`python -m rscope --ssh_to user@remote_host[:port] --ssh_key ~/.ssh/rsync_key --polling_interval 5 # port defaults to 22`
+
+### Features
+
+1. Most features from [Mujoco viewer](https://mujoco.readthedocs.io/en/stable/programming/samples.html#sasimulate)
+2. Browse through trajectories. Use left/right arrow keys to switch through parallel environments and up/down for recent/past trajectories.
+3. Live Plotting. Use `SHIFT+M` to plot trajectory rewards and the contents of `state.metrics`, up to the first 11 keys.
+4. Pixel Observations. Use `SHIFT+O` to overlay pixel observations if available. To use this feature, the observation must be a `dict` and the pixel keys must be prefixed with `pixels/`.
+
+### Sharp bits
+
+Some background on how rscope works: between policy updates, Brax training algorithms evaluate the policy by unrolling parallel environments for a full episode and computing reward statistics. `rscope` loads and visualizes these evaluation trajectories on the CPU. While tracing *eval* runs is simpler to implement and less expensive that *training* runs, this and other implementation details lead to some unexpected gotchas:
+- Typically, stochastic policies are used for evaluating training progress while determinsitic ones are deployed. While you can use rscope on stochastic policies to get a feel for the agent's training exploration, we recommend [deterministic evals](https://github.com/google/brax/blob/main/brax/training/agents/ppo/train.py#L232).
+- Renders incorrectly for domain-randomized training because the loaded assets are from the nominal model definition.
+- Plots only the first 14 keys in the metrics without filtering for shaping rewards.
+- Visualizes only the first 14 pixel observations.
+- Cannot capture curriculum progression during training, as curriculums depend on `state.info`, which is reset at the start of an evaluator run.
+- Currently supports only PPO-based training.
+
+#### Contribution Guidelines:
+
+Please run the following before making a PR:
 ```
-
-### Options
-- `--ssh-to`: SSH connection string in the format `username@host[:port]`
-- `--ssh-key`: Path to SSH private key file (required when using `--ssh-to`)
-- `--polling-interval`: Interval in seconds for SSH file polling (default: 10)
-
-## Notes
-- When using SSH mode, the `--ssh-key` parameter is required
-- The default SSH port (22) is used if not specified in the `--ssh-to` string
+pip install -e ".[dev]"
+pre-commit install
+pre-commit run --all-files
+```
