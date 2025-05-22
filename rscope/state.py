@@ -7,6 +7,16 @@ import rscope.rollout as rollout
 
 class ViewerState:
 
+  # fmt: off
+  # Logarithmically spaced real-time slow-down coefficients (percent).
+  SPEED_PERCENTAGES = [
+      100, 80, 66, 50, 40, 33, 25, 20, 16, 13,
+      10, 8, 6.6, 5.0, 4, 3.3, 2.5, 2, 1.6, 1.3,
+      1, 0.8, 0.66, 0.5, 0.4, 0.33, 0.25, 0.2, 0.16, 0.13,
+      0.1
+  ]
+  # fmt: on
+
   def __init__(self):
     self.cur_eval = 0
     self.cur_env = 0
@@ -17,6 +27,8 @@ class ViewerState:
     self.show_help = True
     self.transfer_status = None  # Current transfer message
     self.transfer_until = None  # Timestamp when message should disappear
+    self.playback_speed = 1.0
+    self.speed_index = 0
 
   def key_callback(self, keycode):
     if keycode == glfw.KEY_RIGHT:
@@ -42,6 +54,14 @@ class ViewerState:
           self.pause = not self.pause
         elif char == "H":
           self.show_help = not self.show_help
+        elif char == "-":
+          self.speed_index = min(
+              len(self.SPEED_PERCENTAGES) - 1, self.speed_index + 1
+          )
+          self.playback_speed = self.SPEED_PERCENTAGES[self.speed_index] / 100.0
+        elif char == "+" or char == "=":
+          self.speed_index = max(0, self.speed_index - 1)
+          self.playback_speed = self.SPEED_PERCENTAGES[self.speed_index] / 100.0
       except ValueError:
         pass
 

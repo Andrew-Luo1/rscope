@@ -142,13 +142,14 @@ def main(ssh_enabled=False, polling_interval=10):
             viewer_state.transfer_until = None
 
         # Overlay text.
-        text_1 = "Eval\nEnv\nStep\nStatus"
+        text_1 = "Eval\nEnv\nStep\nStatus\nSpeed"
         text_2 = (
             f"{viewer_state.cur_eval+1}/{len(rollout.rollouts)}\n"
             f"{viewer_state.cur_env+1}/{rollout.num_envs}\n"
-            f"{replay_index}"
+            f"{replay_index}\n"
         )
-        text_2 += "\nPause" if viewer_state.pause else "\nPlay"
+        text_2 += "Pause" if viewer_state.pause else "Play"
+        text_2 += f"\n{viewer_state.playback_speed * 100:.1f}%"
         overlays = [(
             mujoco.mjtFontScale.mjFONTSCALE_150,
             mujoco.mjtGridPos.mjGRID_TOPLEFT,
@@ -231,9 +232,9 @@ def main(ssh_enabled=False, polling_interval=10):
         replay_index = (replay_index + 1) % replay_len
         viewer.sync()
 
-      time_until_next_step = float(rollout.env_ctrl_dt) - (
-          time.time() - step_start
-      )
+      time_until_next_step = float(
+          rollout.env_ctrl_dt
+      ) / viewer_state.playback_speed - (time.time() - step_start)
       if time_until_next_step > 0:
         time.sleep(time_until_next_step)
 

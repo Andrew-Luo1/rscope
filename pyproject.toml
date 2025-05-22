@@ -46,6 +46,7 @@ dev = [
     "pytype",
     "pre-commit",
     "pytest-xdist",
+    "isort",
 ]
 all = [
     "rscope[dev]",

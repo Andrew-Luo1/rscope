@@ -11,10 +11,12 @@ figures = {}
 
 
 def get_menu_text():
-  text_1 = 'SHIFT + M\nSHIFT + O\nSPACE\nRIGHT/LEFT\nUP/DOWN\nSHIFT + H\nTAB'
+  text_1 = (
+      'SHIFT + M\nSHIFT + O\nSPACE\nRIGHT/LEFT\nUP/DOWN\nSHIFT + H\nTAB\n-/+'
+  )
   text_2 = (
       'Toggle metrics\nToggle pixel obs\nPause/play\nNext/prev env\nNext/prev'
-      ' eval\nToggle help\nToggle left UI'
+      ' eval\nToggle help\nToggle left UI\nSpeed down/up'
   )
   return text_1, text_2
 
