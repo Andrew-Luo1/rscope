@@ -55,7 +55,7 @@ To visualize rollouts stored on a remote server via SSH:
 ---
 ### Sharp bits
 
-Some background on how rscope works: between policy updates, Brax training algorithms evaluate the policy by unrolling parallel environments for a full episode and computing reward statistics. `rscope` loads and visualizes these evaluation trajectories on the CPU. While tracing *eval* runs is simpler to implement and less expensive that *training* runs, this and other implementation details lead to some unexpected gotchas:
+Some background on how rscope works: between policy updates, `rscope` unrolls an episode and visualizes the trajectories on CPU. While this is simpler to implement and less expensive than tracing *training* runs like in IsaacLab, this and other implementation details lead to some unexpected gotchas:
 - Typically, stochastic policies are used for evaluating training progress while determinsitic ones are deployed. While you can use rscope on stochastic policies to get a feel for the agent's training exploration, we recommend [deterministic evals](https://github.com/google/brax/blob/main/brax/training/agents/ppo/train.py#L232).
 - Renders incorrectly for domain-randomized training because the loaded assets are from the nominal model definition.
 - Plots only the first 14 keys in the metrics without filtering for shaping rewards.
