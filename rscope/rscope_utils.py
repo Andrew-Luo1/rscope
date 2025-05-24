@@ -9,6 +9,7 @@ import shutil
 from typing import Any, Dict, Optional, Union
 
 import jax
+import jax.numpy as jp
 import numpy as np
 
 from rscope import config
@@ -54,24 +55,51 @@ def rscope_init(
     pickle.dump(rscope_meta, f)
 
 
-def dump_eval(eval: dict):
+# def dump_eval(eval: dict):
+#   # write to <datetime>.mj_unroll.
+#   now = datetime.datetime.now()
+#   now_str = now.strftime("%Y_%m_%d-%H_%M_%S")
+#   # ensure it's numpy.
+#   eval = jax.tree.map(lambda x: np.array(x), eval)
+
+#   # save as dict rather than brax Transition.
+#   raw_rollout = eval.extras["state_extras"]["trace"]
+#   eval_rollout = rollout.Rollout(
+#       qpos=raw_rollout["qpos"],
+#       qvel=raw_rollout["qvel"],
+#       mocap_pos=raw_rollout["mocap_pos"],
+#       mocap_quat=raw_rollout["mocap_quat"],
+#       obs=eval.observation,
+#       reward=eval.reward,
+#       time=raw_rollout["time"],
+#       metrics=raw_rollout["metrics"],
+#   )
+
+#   # 2 stages to ensure atomicity.
+#   temp_path = os.path.join(config.TEMP_PATH, f"partial_transition.tmp")
+#   final_path = os.path.join(config.BASE_PATH, f"{now_str}.mj_unroll")
+#   with open(temp_path, "wb") as f:
+#     pickle.dump(eval_rollout, f)
+#   os.rename(temp_path, final_path)
+
+
+def dump_eval(trace: dict, obs: Union[jp.ndarray, dict], rew: jp.ndarray):
   # write to <datetime>.mj_unroll.
   now = datetime.datetime.now()
   now_str = now.strftime("%Y_%m_%d-%H_%M_%S")
   # ensure it's numpy.
-  eval = jax.tree.map(lambda x: np.array(x), eval)
+  trace, obs, rew = jax.tree.map(lambda x: np.array(x), (trace, obs, rew))
 
   # save as dict rather than brax Transition.
-  raw_rollout = eval.extras["state_extras"]["trace"]
   eval_rollout = rollout.Rollout(
-      qpos=raw_rollout["qpos"],
-      qvel=raw_rollout["qvel"],
-      mocap_pos=raw_rollout["mocap_pos"],
-      mocap_quat=raw_rollout["mocap_quat"],
-      obs=eval.observation,
-      reward=eval.reward,
-      time=raw_rollout["time"],
-      metrics=raw_rollout["metrics"],
+      qpos=trace["qpos"],
+      qvel=trace["qvel"],
+      mocap_pos=trace["mocap_pos"],
+      mocap_quat=trace["mocap_quat"],
+      obs=obs,
+      reward=rew,
+      time=trace["time"],
+      metrics=trace["metrics"],
   )
 
   # 2 stages to ensure atomicity.
