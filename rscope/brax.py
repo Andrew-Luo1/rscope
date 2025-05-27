@@ -1,3 +1,5 @@
+from typing import Callable
+
 import jax
 from ml_collections import config_dict
 
@@ -27,6 +29,7 @@ class BraxRolloutSaver:
       rscope_envs: int,
       determistic: bool,
       key: jax.random.PRNGKey = jax.random.PRNGKey(0),
+      callback_fn: Callable = None,
   ):
     self.trace_env = trace_env
     self.ppo_params = ppo_params
@@ -38,6 +41,7 @@ class BraxRolloutSaver:
     rscope_utils.rscope_init(
         self.trace_env.xml_path, self.trace_env.model_assets
     )
+    self.callback_fn = callback_fn
 
   def set_make_policy(self, new_make_policy):
     if not self.make_policy:
@@ -74,4 +78,6 @@ class BraxRolloutSaver:
 
   def dump_rollout(self, params):
     trace, obs, rew = jax.jit(self._rollout)(params)
+    if self.callback_fn:
+      self.callback_fn(trace, obs, rew)
     rscope_utils.dump_eval(trace, obs, rew)
