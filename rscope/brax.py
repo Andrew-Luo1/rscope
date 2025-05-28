@@ -63,21 +63,21 @@ class BraxRolloutSaver:
       key, key_act = jax.random.split(key)
       act, _ = policy(state.obs, key_act)
       state = self.trace_env.step(state, act)
-      full_ret = (make_raw_rollout(state), state.obs, state.reward)
+      full_ret = (make_raw_rollout(state), state.obs, state.reward, state.done)
       return (state, key), jax.tree.map(
           lambda x: x[: self.rscope_envs], full_ret
       )
 
-    _, (trace, obs, rew) = jax.lax.scan(
+    _, (trace, obs, rew, done) = jax.lax.scan(
         step_fn,
         (state, key_unroll),
         None,
         length=self.ppo_params.episode_length // self.ppo_params.action_repeat,
     )
-    return trace, obs, rew
+    return trace, obs, rew, done
 
   def dump_rollout(self, params):
-    trace, obs, rew = jax.jit(self._rollout)(params)
+    trace, obs, rew, done = jax.jit(self._rollout)(params)
     if self.callback_fn:
-      self.callback_fn(trace, obs, rew)
+      self.callback_fn(trace, obs, rew, done)
     rscope_utils.dump_eval(trace, obs, rew)

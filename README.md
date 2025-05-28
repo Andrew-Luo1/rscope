@@ -2,9 +2,7 @@
 
 ## Welcome to rscope!
 
-Interactively visualize trajectories while training Mujoco Playground environments. Rscope can visualize both local and remote (potentially headless) training runs.
-
-![Drawing 2025-05-18 21 54 17 excalidraw](https://github.com/user-attachments/assets/8d6c83e6-fb28-4b46-abf3-25b9e04141a2)
+A light-weight package to collect and interactively visualize trajectories while training Mujoco Playground environments. Rscope can visualize both local and remote (potentially headless) training runs.
 
 ### Installation
 > [!IMPORTANT]
@@ -55,7 +53,7 @@ To visualize rollouts stored on a remote server via SSH:
 ---
 ### Sharp bits
 
-Some background on how rscope works: between policy updates, `rscope` unrolls an episode and visualizes the trajectories on CPU. While this is simpler to implement and less expensive than tracing *training* runs like in IsaacLab, this and other implementation details lead to some unexpected gotchas:
+Some background on how rscope works: between policy updates, `rscope` unrolls multiple trajectories in parallel then visualizes them on CPU. While this is simpler to implement and less expensive than tracing *training* runs like in IsaacLab, this and other implementation details lead to some unexpected gotchas:
 - Typically, stochastic policies are used for evaluating training progress while determinsitic ones are deployed. While you can use rscope on stochastic policies to get a feel for the agent's training exploration, we recommend [deterministic evals](https://github.com/google/brax/blob/main/brax/training/agents/ppo/train.py#L232).
 - Renders incorrectly for domain-randomized training because the loaded assets are from the nominal model definition.
 - Plots only the first 14 keys in the metrics without filtering for shaping rewards.
