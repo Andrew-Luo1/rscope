@@ -4,6 +4,8 @@
 
 A light-weight package to collect and interactively visualize trajectories while training Mujoco Playground environments. Rscope can visualize both local and remote (potentially headless) training runs.
 
+![rscope_header](https://github.com/user-attachments/assets/225d0290-501d-4a2e-ace9-f2122786ffb6)
+
 ### Installation
 > [!IMPORTANT]
 > - Requires Python 3.10 or later.
