@@ -9,7 +9,6 @@ A light-weight package to collect and interactively visualize trajectories while
 ### Installation
 > [!IMPORTANT]
 > - Requires Python 3.10 or later.
-> - [TEMPORARY] Rscope currently requires custom forks of [Brax](https://github.com/Andrew-Luo1/brax/tree/rscope) and [Playground](https://github.com/Andrew-Luo1/mujoco_playground_new/tree/rscope). This should be resolved in a few days.
 
 `pip install rscope`
 
