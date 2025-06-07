@@ -38,8 +38,13 @@ class BraxRolloutSaver:
     self.determistic = determistic
     self.make_policy = None
     self.key = key
+    if not hasattr(self.trace_env, '_model_assets'):
+      raise NotImplementedError(
+          '_model_assets not defined for this environment'
+          'see cartpole.py for an example.'
+      )
     rscope_utils.rscope_init(
-        self.trace_env.xml_path, self.trace_env.model_assets
+        self.trace_env.xml_path, self.trace_env._model_assets
     )
     self.callback_fn = callback_fn
 
