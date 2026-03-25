@@ -98,9 +98,11 @@ def main(ssh_enabled=False, polling_interval=10):
       show_right_ui=False,
       key_callback=viewer_state.key_callback,
   ) as viewer:
+    loop_count = 0
 
     while viewer.is_running():
       step_start = time.time()
+      loop_count += 1
 
       # Trajectory selection: if a new rollout is requested.
       if viewer_state.change_rollout:
@@ -176,42 +178,43 @@ def main(ssh_enabled=False, polling_interval=10):
 
         viewer.set_texts(overlays)
 
-        # Render figures (metrics).
-        if viewer_state.show_metrics:
-          if not viewer_state.pause:
-            cur_metrics = {
-                key: metrics[replay_index]
-                for key, metrics in cur_rollout.metrics.items()
-            }
-            for key in cur_metrics:
-              vu.add_data_to_fig(key, cur_metrics[key])
-          viewports = vu.get_viewports(
-              len(cur_rollout.metrics), viewer.viewport
-          )
-          viewport_figures = list(zip(viewports, list(vu.figures.values())))
-          viewer.set_figures(viewport_figures)
-        else:
-          viewer.clear_figures()
-
-        # Render pixel observations if available.
-        from collections.abc import Mapping
-
-        if isinstance(cur_rollout.obs, Mapping):
-          if any(key.startswith("pixels/") for key in cur_rollout.obs.keys()):
-            if viewer_state.show_pixel_obs:
-              cur_obs = rollout.dict_obs_t_select(cur_rollout.obs, replay_index)
-              viewports = vu.get_viewports(len(cur_obs), viewer.viewport)
-              processed_obs = {
-                  key: image_processing.process_img(
-                      cur_obs[key], viewport.height, viewport.width
-                  )
-                  for key, viewport in zip(cur_obs.keys(), viewports)
+        # Render figures (metrics) every 10 frames to avoid freezing.
+        if loop_count % 10 == 0:
+          if viewer_state.show_metrics:
+            if not viewer_state.pause:
+              cur_metrics = {
+                  key: metrics[replay_index]
+                  for key, metrics in cur_rollout.metrics.items()
               }
-              viewer.set_images(
-                  list(zip(viewports, list(processed_obs.values())))
-              )
-            else:
-              viewer.clear_images()
+              for key in cur_metrics:
+                vu.add_data_to_fig(key, cur_metrics[key])
+            viewports = vu.get_viewports(
+                len(cur_rollout.metrics), viewer.viewport
+            )
+            viewport_figures = list(zip(viewports, list(vu.figures.values())))
+            viewer.set_figures(viewport_figures)
+          else:
+            viewer.clear_figures()
+
+          # Render pixel observations if available.
+          from collections.abc import Mapping
+
+          if isinstance(cur_rollout.obs, Mapping):
+            if any(key.startswith("pixels/") for key in cur_rollout.obs.keys()):
+              if viewer_state.show_pixel_obs:
+                cur_obs = rollout.dict_obs_t_select(cur_rollout.obs, replay_index)
+                viewports = vu.get_viewports(len(cur_obs), viewer.viewport)
+                processed_obs = {
+                    key: image_processing.process_img(
+                        cur_obs[key], viewport.height, viewport.width
+                    )
+                    for key, viewport in zip(cur_obs.keys(), viewports)
+                }
+                viewer.set_images(
+                    list(zip(viewports, list(processed_obs.values())))
+                )
+              else:
+                viewer.clear_images()
 
       # Advance simulation: update the state.
       def advance_rollout(mj_model, mj_data, idx):
@@ -232,11 +235,12 @@ def main(ssh_enabled=False, polling_interval=10):
         replay_index = (replay_index + 1) % replay_len
         viewer.sync()
 
-      time_until_next_step = float(
-          rollout.env_ctrl_dt
-      ) / viewer_state.playback_speed - (time.time() - step_start)
-      if time_until_next_step > 0:
-        time.sleep(time_until_next_step)
+      time_until_next_step = max(
+          float(rollout.env_ctrl_dt) / viewer_state.playback_speed
+          - (time.time() - step_start),
+          0.001,
+      )
+      time.sleep(time_until_next_step)
 
   # Modify cleanup section
   if ssh_enabled:
