@@ -25,7 +25,7 @@ def load_model_and_data(ssh_enabled=False):
 
         try:
           # Copy meta file from remote to local
-          remote_meta = str(config.META_PATH)
+          remote_meta = config.META_PATH.as_posix()
           local_meta = str(config.META_PATH)
           sftp.get(remote_meta, local_meta)
           break
