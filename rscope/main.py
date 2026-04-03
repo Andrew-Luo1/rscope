@@ -98,9 +98,11 @@ def main(ssh_enabled=False, polling_interval=10):
       show_right_ui=False,
       key_callback=viewer_state.key_callback,
   ) as viewer:
+    loop_count = 0
 
     while viewer.is_running():
       step_start = time.time()
+      loop_count += 1
 
       # Trajectory selection: if a new rollout is requested.
       if viewer_state.change_rollout:
@@ -128,55 +130,54 @@ def main(ssh_enabled=False, polling_interval=10):
         replay_index = 0
         replay_len = cur_rollout.qpos.shape[0]
 
-      with viewer.lock():
-        # Check if the transfer status message has expired
-        if (
-            ssh_enabled
-            and viewer_state.transfer_status
-            and viewer_state.transfer_until
-        ):
-          current_time = time.time()
-          if current_time > viewer_state.transfer_until:
-            # Clear the message if it's time
-            viewer_state.transfer_status = None
-            viewer_state.transfer_until = None
+      # Check if the transfer status message has expired
+      if (
+          ssh_enabled
+          and viewer_state.transfer_status
+          and viewer_state.transfer_until
+      ):
+        if time.time() > viewer_state.transfer_until:
+          viewer_state.transfer_status = None
+          viewer_state.transfer_until = None
 
-        # Overlay text.
-        text_1 = "Eval\nEnv\nStep\nStatus\nSpeed"
-        text_2 = (
-            f"{viewer_state.cur_eval+1}/{len(rollout.rollouts)}\n"
-            f"{viewer_state.cur_env+1}/{rollout.num_envs}\n"
-            f"{replay_index}\n"
-        )
-        text_2 += "Pause" if viewer_state.pause else "Play"
-        text_2 += f"\n{viewer_state.playback_speed * 100:.1f}%"
-        overlays = [(
+      # Build overlay text (no lock needed for pure Python).
+      text_1 = "Eval\nEnv\nStep\nStatus\nSpeed"
+      text_2 = (
+          f"{viewer_state.cur_eval+1}/{len(rollout.rollouts)}\n"
+          f"{viewer_state.cur_env+1}/{rollout.num_envs}\n"
+          f"{replay_index}\n"
+      )
+      text_2 += "Pause" if viewer_state.pause else "Play"
+      text_2 += f"\n{viewer_state.playback_speed * 100:.1f}%"
+      overlays = [(
+          mujoco.mjtFontScale.mjFONTSCALE_150,
+          mujoco.mjtGridPos.mjGRID_TOPLEFT,
+          text_1,
+          text_2,
+      )]
+      if viewer_state.show_help:
+        menu_text_1, menu_text_2 = vu.get_menu_text()
+        overlays.append((
             mujoco.mjtFontScale.mjFONTSCALE_150,
-            mujoco.mjtGridPos.mjGRID_TOPLEFT,
-            text_1,
-            text_2,
-        )]
-        if viewer_state.show_help:
-          menu_text_1, menu_text_2 = vu.get_menu_text()
-          overlays.append((
-              mujoco.mjtFontScale.mjFONTSCALE_150,
-              mujoco.mjtGridPos.mjGRID_BOTTOMLEFT,
-              menu_text_1,
-              menu_text_2,
-          ))
+            mujoco.mjtGridPos.mjGRID_BOTTOMLEFT,
+            menu_text_1,
+            menu_text_2,
+        ))
 
-        # Add transfer status if available
-        if ssh_enabled and viewer_state.transfer_status:
-          overlays.append((
-              mujoco.mjtFontScale.mjFONTSCALE_250,
-              mujoco.mjtGridPos.mjGRID_BOTTOM,
-              viewer_state.transfer_status,
-              "",
-          ))
+      # Add transfer status if available
+      if ssh_enabled and viewer_state.transfer_status:
+        overlays.append((
+            mujoco.mjtFontScale.mjFONTSCALE_250,
+            mujoco.mjtGridPos.mjGRID_BOTTOM,
+            viewer_state.transfer_status,
+            "",
+        ))
 
-        viewer.set_texts(overlays)
+      # Set overlays, figures, images — outside the lock.
+      viewer.set_texts(overlays)
 
-        # Render figures (metrics).
+      # Render figures (metrics) every 10 frames to avoid freezing.
+      if loop_count % 10 == 0:
         if viewer_state.show_metrics:
           if not viewer_state.pause:
             cur_metrics = {
@@ -213,30 +214,30 @@ def main(ssh_enabled=False, polling_interval=10):
             else:
               viewer.clear_images()
 
-      # Advance simulation: update the state.
-      def advance_rollout(mj_model, mj_data, idx):
+      # Advance simulation: lock only around mj_data modification.
+      with viewer.lock():
         mj_data.qpos, mj_data.qvel = (
-            cur_rollout.qpos[idx],
-            cur_rollout.qvel[idx],
+            cur_rollout.qpos[replay_index],
+            cur_rollout.qvel[replay_index],
         )
         if cur_rollout.mocap_pos.size:
           mj_data.mocap_pos, mj_data.mocap_quat = (
-              cur_rollout.mocap_pos[idx],
-              cur_rollout.mocap_quat[idx],
+              cur_rollout.mocap_pos[replay_index],
+              cur_rollout.mocap_quat[replay_index],
           )
-        mj_data.time = cur_rollout.time[idx]
+        mj_data.time = cur_rollout.time[replay_index]
         mujoco.mj_forward(mj_model, mj_data)
 
-      advance_rollout(mj_model, mj_data, replay_index)
       if not viewer_state.pause:
         replay_index = (replay_index + 1) % replay_len
-        viewer.sync()
+      viewer.sync()
 
-      time_until_next_step = float(
-          rollout.env_ctrl_dt
-      ) / viewer_state.playback_speed - (time.time() - step_start)
-      if time_until_next_step > 0:
-        time.sleep(time_until_next_step)
+      time_until_next_step = max(
+          float(rollout.env_ctrl_dt) / viewer_state.playback_speed
+          - (time.time() - step_start),
+          0.001,
+      )
+      time.sleep(time_until_next_step)
 
   # Modify cleanup section
   if ssh_enabled:

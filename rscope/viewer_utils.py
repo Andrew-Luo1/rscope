@@ -3,7 +3,7 @@
 import mujoco
 import numpy as np
 
-MAX_VIEWPORTS = 12
+MAX_VIEWPORTS = 24
 MAX_LINE_POINTS = 200
 y_range = [0, 0.01]
 gridsize = [3, 4]
