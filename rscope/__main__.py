@@ -6,6 +6,7 @@ from absl import app
 from absl import flags
 from absl import logging
 
+from rscope import config as rscope_config
 from rscope.main import main
 
 # Configure absl flags
@@ -17,9 +18,16 @@ flags.DEFINE_string('ssh_key', None, 'Path to SSH private key file')
 flags.DEFINE_integer(
     'polling_interval', 10, 'Interval in seconds for SSH file polling'
 )
+flags.DEFINE_string(
+    'path', None,
+    'Root directory for rscope data (default: /tmp/rscope). '
+    'Can also be set via RSCOPE_PATH env var.'
+)
 
 
 def _main(argv):
+  if FLAGS.path:
+    rscope_config.set_path(FLAGS.path)
   ssh_enabled = FLAGS.ssh_to is not None
   main(ssh_enabled=ssh_enabled, polling_interval=FLAGS.polling_interval)
 
