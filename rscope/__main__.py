@@ -26,9 +26,14 @@ flags.DEFINE_string(
 
 
 def _main(argv):
-  if FLAGS.path:
-    rscope_config.set_path(FLAGS.path)
   ssh_enabled = FLAGS.ssh_to is not None
+  if FLAGS.path:
+    if ssh_enabled:
+      # In SSH mode, --path is the remote path; local stays default.
+      rscope_config.set_remote_path(FLAGS.path)
+    else:
+      # In local mode, --path is both read and write path.
+      rscope_config.set_path(FLAGS.path)
   main(ssh_enabled=ssh_enabled, polling_interval=FLAGS.polling_interval)
 
 

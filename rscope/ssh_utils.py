@@ -79,7 +79,7 @@ class SSHFileWatcher(threading.Thread):
     sftp = ssh.open_sftp()
     try:
       while not self.stop_event.is_set():
-        remote_files = sorted(sftp.listdir(config.BASE_PATH.as_posix()))
+        remote_files = sorted(sftp.listdir(config.get_remote_base_path().as_posix()))
         new_files = [
             f
             for f in remote_files
@@ -124,7 +124,7 @@ class SSHFileTransfer(threading.Thread):
           fname = self.file_queue.get(timeout=1)
           logging.info(f"Transferring eval: {fname}")
 
-          remote_path = (config.BASE_PATH / fname).as_posix()
+          remote_path = (config.get_remote_base_path() / fname).as_posix()
           tmp_local_path = str(config.TEMP_PATH / f".tmp_{fname}")
           final_local_path = str(config.BASE_PATH / fname)
 
